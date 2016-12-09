@@ -34,7 +34,8 @@ class PeriodicalDataScraper {
         ResponseEntity<String> trafficData;
         try {
             trafficData = restTemplate.exchange(targetUrl.toString(), HttpMethod.GET, entity, String.class);
-            LOG.info("Got traffic data: " + trafficData.getBody());
+            // LOG.info("Got traffic data: " + trafficData.getBody());
+            LOG.info("Got traffic data");
         } catch (ResourceAccessException rae) {
             LOG.error("Could not access resource: " + rae);
         } catch (Exception e) {
