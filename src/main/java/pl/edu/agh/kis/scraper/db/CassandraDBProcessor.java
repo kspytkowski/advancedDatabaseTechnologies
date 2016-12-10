@@ -19,11 +19,11 @@ public class CassandraDBProcessor implements DBProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(CassandraDBProcessor.class);
 
     private static final String[] cassandraNodes = new String[] { "10.156.207.9", "10.156.207.26", "10.156.207.175" };
-    private static final String keyspace = "measurments";
+    private static final String keyspace = "measurements";
 
     private static final int SENSOR_INDEX = 0;
     private static final int TIME_INDEX = 1;
-    private static final int MEASURMENT_INDEX = 2;
+    private static final int MEASUREMENT_INDEX = 2;
 
     private static final String INSERT_STATEMENT = "INSERT INTO measurements (sensorID, time, value) VALUES (?,?,?)";
 
@@ -45,7 +45,7 @@ public class CassandraDBProcessor implements DBProcessor {
         for (String line : body.split("\n")) {
             String[] fields = line.split(",");
             LocalDateTime measurementTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(fields[TIME_INDEX]));
-            ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASURMENT_INDEX])));
+            ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASUREMENT_INDEX])));
         }
         return ans;
     }

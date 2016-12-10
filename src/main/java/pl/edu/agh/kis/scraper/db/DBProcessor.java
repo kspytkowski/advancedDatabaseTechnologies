@@ -8,7 +8,7 @@ import java.util.List;
  * Created by Jakub Fortunka on 10.12.2016.
  */
 public interface DBProcessor {
-    public void addMeasurementsToDB(List<Measurement> measurementsList);
-    public List<Measurement> getMeasurementsFromBody(String body);
+    void addMeasurementsToDB(List<Measurement> measurementsList);
+    List<Measurement> getMeasurementsFromBody(String body);
     void closeConnection();
 }
