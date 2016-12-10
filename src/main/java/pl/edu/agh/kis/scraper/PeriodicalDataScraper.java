@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import pl.edu.agh.kis.scraper.db.CassandraDBProcessor;
+import pl.edu.agh.kis.scraper.db.DBProcessor;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -34,6 +36,8 @@ class PeriodicalDataScraper {
         ResponseEntity<String> trafficData;
         try {
             trafficData = restTemplate.exchange(targetUrl.toString(), HttpMethod.GET, entity, String.class);
+            DBProcessor dbProcessor = new CassandraDBProcessor();
+            dbProcessor.addMeasurmentsToDB(dbProcessor.getMeasurmentsFromBody(trafficData.getBody()));
             // LOG.info("Got traffic data: " + trafficData.getBody());
             LOG.info("Got traffic data");
         } catch (ResourceAccessException rae) {
