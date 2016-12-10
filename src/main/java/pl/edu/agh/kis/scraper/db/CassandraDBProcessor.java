@@ -3,7 +3,7 @@ package pl.edu.agh.kis.scraper.db;
 import com.datastax.driver.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.edu.agh.kis.scraper.model.Measurment;
+import pl.edu.agh.kis.scraper.model.Measurement;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,24 +25,25 @@ public class CassandraDBProcessor implements DBProcessor {
     private static final int TIME_INDEX = 1;
     private static final int MEASURMENT_INDEX = 2;
 
-    private static final String INSERT_STATEMENT = "INSERT INTO measurments (sensorID, time, value) VALUES (?,?,?)";
+    private static final String INSERT_STATEMENT = "INSERT INTO measurements (sensorID, time, value) VALUES (?,?,?)";
 
-    public void addMeasurmentsToDB(List<Measurment> measurments) {
-        Cluster cluster = Cluster.builder().addContactPoints(cassandraNodes).build();
-        Session session = cluster.connect(keyspace);
+    private Cluster cluster = Cluster.builder().addContactPoints(cassandraNodes).build();
+    private Session session = cluster.connect(keyspace);
+
+    public void addMeasurementsToDB(List<Measurement> measurements) {
         PreparedStatement preparedStatement = session.prepare(INSERT_STATEMENT);
         BoundStatement boundStatement = new BoundStatement(preparedStatement);
         BatchStatement batchStatement = new BatchStatement();
-        measurments.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
+        measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
         session.execute(batchStatement);
     }
 
-    public List<Measurment> getMeasurmentsFromBody(String body) {
-        List<Measurment> ans = new ArrayList<>();
+    public List<Measurement> getMeasurementsFromBody(String body) {
+        List<Measurement> ans = new ArrayList<>();
         for (String line : body.split("\n")) {
             String[] fields = line.split(",");
-            LocalDateTime measurmentTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(fields[TIME_INDEX]));
-            ans.add(new Measurment(fields[SENSOR_INDEX], measurmentTime, Integer.valueOf(fields[MEASURMENT_INDEX])));
+            LocalDateTime measurementTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(fields[TIME_INDEX]));
+            ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASURMENT_INDEX])));
         }
         return ans;
     }

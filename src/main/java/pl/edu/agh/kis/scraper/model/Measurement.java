@@ -10,10 +10,8 @@ import java.time.LocalDateTime;
  */
 
 @Data
-public class Measurment {
-
+public class Measurement {
     @NonNull private String sensorId;
     @NonNull private LocalDateTime measurmentTimestamp;
     @NonNull private int measurment;
-
 }
