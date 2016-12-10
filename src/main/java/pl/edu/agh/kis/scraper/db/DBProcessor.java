@@ -10,4 +10,5 @@ import java.util.List;
 public interface DBProcessor {
     public void addMeasurementsToDB(List<Measurement> measurementsList);
     public List<Measurement> getMeasurementsFromBody(String body);
+    void closeConnection();
 }

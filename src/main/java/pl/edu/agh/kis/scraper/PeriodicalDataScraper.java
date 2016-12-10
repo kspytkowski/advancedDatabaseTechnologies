@@ -11,6 +11,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import pl.edu.agh.kis.scraper.db.CassandraDBProcessor;
 import pl.edu.agh.kis.scraper.db.DBProcessor;
 
+import javax.annotation.PreDestroy;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,11 @@ class PeriodicalDataScraper {
         }
         // TODO - In my opinion we have to be prepared for data violating our constraints on database
         // e.g. service may return the same data twice...
+    }
+
+    @PreDestroy
+    void cleanUp() {
+        dbProcessor.closeConnection();
     }
 
 }

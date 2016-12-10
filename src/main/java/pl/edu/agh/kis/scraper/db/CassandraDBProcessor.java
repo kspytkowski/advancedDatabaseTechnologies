@@ -30,6 +30,7 @@ public class CassandraDBProcessor implements DBProcessor {
     private Cluster cluster = Cluster.builder().addContactPoints(cassandraNodes).build();
     private Session session = cluster.connect(keyspace);
 
+    @Override
     public void addMeasurementsToDB(List<Measurement> measurements) {
         PreparedStatement preparedStatement = session.prepare(INSERT_STATEMENT);
         BoundStatement boundStatement = new BoundStatement(preparedStatement);
@@ -38,6 +39,7 @@ public class CassandraDBProcessor implements DBProcessor {
         session.execute(batchStatement);
     }
 
+    @Override
     public List<Measurement> getMeasurementsFromBody(String body) {
         List<Measurement> ans = new ArrayList<>();
         for (String line : body.split("\n")) {
@@ -46,5 +48,10 @@ public class CassandraDBProcessor implements DBProcessor {
             ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASURMENT_INDEX])));
         }
         return ans;
+    }
+
+    @Override
+    public void closeConnection() {
+        cluster.close();
     }
 }
