@@ -1,6 +1,7 @@
 package pl.edu.agh.kis.scraper.db;
 
 import com.datastax.driver.core.*;
+import com.datastax.driver.extras.codecs.jdk8.InstantCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.edu.agh.kis.scraper.model.Measurement;
@@ -8,6 +9,7 @@ import pl.edu.agh.kis.scraper.model.Measurement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,16 +22,23 @@ public class CassandraDBProcessor implements DBProcessor {
     private static final int TIME_INDEX = 1;
     private static final int MEASUREMENT_INDEX = 2;
     private static final String INSERT_STATEMENT = "INSERT INTO measurements (sensorID, time, value) VALUES (?,?,?)";
-    private Cluster cluster = Cluster.builder().addContactPoints(CASSANDRA_NODES).build();
-    private Session session = cluster.connect(KEYSPACE);
+    private Cluster cluster;
+    private Session session;
+    private PreparedStatement preparedStatement;
+
+    public CassandraDBProcessor() {
+        cluster = Cluster.builder().addContactPoints(CASSANDRA_NODES).build();
+        session = cluster.connect(KEYSPACE);
+        preparedStatement = session.prepare(INSERT_STATEMENT);
+        cluster.getConfiguration().getCodecRegistry().register(InstantCodec.instance);
+    }
 
     @Override
     public void addMeasurementsToDB(List<Measurement> measurements) {
         if (!measurements.isEmpty()) {
-            PreparedStatement preparedStatement = session.prepare(INSERT_STATEMENT);
             BoundStatement boundStatement = new BoundStatement(preparedStatement);
             BatchStatement batchStatement = new BatchStatement();
-            measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
+            measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment())));
             session.execute(batchStatement);
             LOG.info("Saved traffic data to database");
         } else {
