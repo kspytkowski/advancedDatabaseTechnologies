@@ -41,12 +41,8 @@ public class CassandraDBProcessor implements DBProcessor {
             batches(measurements, 100).forEach(
                     z -> {
                         BatchStatement batchStatement = new BatchStatement();
-                        z.forEach(
-                                x -> {
-                                    batchStatement.add(new BoundStatement(preparedStatement).bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment()));
-                                    session.execute(batchStatement);
-                                }
-                        );
+                        z.forEach(x -> batchStatement.add(new BoundStatement(preparedStatement).bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment())));
+                        session.execute(batchStatement);
                     }
             );
             LOG.info("Saved traffic data to database");
