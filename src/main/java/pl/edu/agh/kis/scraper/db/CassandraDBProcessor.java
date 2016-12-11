@@ -12,6 +12,8 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class CassandraDBProcessor implements DBProcessor {
 
@@ -36,10 +38,17 @@ public class CassandraDBProcessor implements DBProcessor {
     @Override
     public void addMeasurementsToDB(List<Measurement> measurements) {
         if (!measurements.isEmpty()) {
-            BoundStatement boundStatement = new BoundStatement(preparedStatement);
-            BatchStatement batchStatement = new BatchStatement();
-            measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment())));
-            session.execute(batchStatement);
+            batches(measurements, 100).forEach(
+                    z -> {
+                        BatchStatement batchStatement = new BatchStatement();
+                        z.forEach(
+                                x -> {
+                                    batchStatement.add(new BoundStatement(preparedStatement).bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment()));
+                                    session.execute(batchStatement);
+                                }
+                        );
+                    }
+            );
             LOG.info("Saved traffic data to database");
         } else {
             LOG.info("Got empty list of traffic data, nothing saved to database");
@@ -62,5 +71,16 @@ public class CassandraDBProcessor implements DBProcessor {
     @Override
     public void closeConnection() {
         cluster.close();
+    }
+
+    private <T> Stream<List<T>> batches(List<T> source, int length) {
+        if (length <= 0)
+            throw new IllegalArgumentException("length = " + length);
+        int size = source.size();
+        if (size <= 0)
+            return Stream.empty();
+        int fullChunks = (size - 1) / length;
+        return IntStream.range(0, fullChunks + 1).mapToObj(
+                n -> source.subList(n * length, n == fullChunks ? size : (n + 1) * length));
     }
 }
