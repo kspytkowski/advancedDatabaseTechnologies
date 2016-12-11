@@ -32,20 +32,24 @@ public class CassandraDBProcessor implements DBProcessor {
 
     @Override
     public void addMeasurementsToDB(List<Measurement> measurements) {
-        PreparedStatement preparedStatement = session.prepare(INSERT_STATEMENT);
-        BoundStatement boundStatement = new BoundStatement(preparedStatement);
-        BatchStatement batchStatement = new BatchStatement();
-        measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
-        session.execute(batchStatement);
+        if (!measurements.isEmpty()) {
+            PreparedStatement preparedStatement = session.prepare(INSERT_STATEMENT);
+            BoundStatement boundStatement = new BoundStatement(preparedStatement);
+            BatchStatement batchStatement = new BatchStatement();
+            measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
+            session.execute(batchStatement);
+        }
     }
 
     @Override
     public List<Measurement> getMeasurementsFromBody(String body) {
         List<Measurement> ans = new ArrayList<>();
-        for (String line : body.split("\n")) {
-            String[] fields = line.split(",");
-            LocalDateTime measurementTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(fields[TIME_INDEX]));
-            ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASUREMENT_INDEX])));
+        if (body != null) {
+            for (String line : body.split("\n")) {
+                String[] fields = line.split(",");
+                LocalDateTime measurementTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(fields[TIME_INDEX]));
+                ans.add(new Measurement(fields[SENSOR_INDEX], measurementTime, Integer.valueOf(fields[MEASUREMENT_INDEX])));
+            }
         }
         return ans;
     }
