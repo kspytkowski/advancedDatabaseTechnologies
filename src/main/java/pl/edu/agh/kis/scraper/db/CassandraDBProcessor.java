@@ -11,24 +11,17 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Jakub Fortunka on 10.12.2016.
- */
 public class CassandraDBProcessor implements DBProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraDBProcessor.class);
-
-    private static final String[] cassandraNodes = new String[] { "10.156.207.9", "10.156.207.26", "10.156.207.175" };
-    private static final String keyspace = "measurements";
-
+    private static final String[] CASSANDRA_NODES = new String[]{"10.156.207.9", "10.156.207.26", "10.156.207.175"};
+    private static final String KEYSPACE = "measurements";
     private static final int SENSOR_INDEX = 0;
     private static final int TIME_INDEX = 1;
     private static final int MEASUREMENT_INDEX = 2;
-
     private static final String INSERT_STATEMENT = "INSERT INTO measurements (sensorID, time, value) VALUES (?,?,?)";
-
-    private Cluster cluster = Cluster.builder().addContactPoints(cassandraNodes).build();
-    private Session session = cluster.connect(keyspace);
+    private Cluster cluster = Cluster.builder().addContactPoints(CASSANDRA_NODES).build();
+    private Session session = cluster.connect(KEYSPACE);
 
     @Override
     public void addMeasurementsToDB(List<Measurement> measurements) {
@@ -38,6 +31,9 @@ public class CassandraDBProcessor implements DBProcessor {
             BatchStatement batchStatement = new BatchStatement();
             measurements.forEach(x -> batchStatement.add(boundStatement.bind(x.getSensorId(), x.getMeasurmentTimestamp().toString(), x.getMeasurment())));
             session.execute(batchStatement);
+            LOG.info("Saved traffic data to database");
+        } else {
+            LOG.info("Got empty list of traffic data, nothing saved to database");
         }
     }
 

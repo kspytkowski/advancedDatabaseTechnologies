@@ -5,13 +5,13 @@ import lombok.NonNull;
 
 import java.time.LocalDateTime;
 
-/**
- * Created by Jakub Fortunka on 10.12.2016.
- */
-
 @Data
 public class Measurement {
-    @NonNull private String sensorId;
-    @NonNull private LocalDateTime measurmentTimestamp;
-    @NonNull private int measurment;
+
+    @NonNull
+    private String sensorId;
+    @NonNull
+    private LocalDateTime measurmentTimestamp;
+    @NonNull
+    private int measurment;
 }

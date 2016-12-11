@@ -19,10 +19,9 @@ import java.util.List;
 @Component
 class PeriodicalDataScraper {
 
-    private RestTemplate restTemplate = new RestTemplate();
-    private static final String TRAFFIC_DATA_URL = "http://borg.kis.agh.edu.pl/~wojnicki/traffic.php";
     private static final Logger LOG = LoggerFactory.getLogger(PeriodicalDataScraper.class);
-
+    private static final String TRAFFIC_DATA_URL = "http://borg.kis.agh.edu.pl/~wojnicki/traffic.php";
+    private static RestTemplate restTemplate = new RestTemplate();
     private static DBProcessor dbProcessor = new CassandraDBProcessor();
 
     @Scheduled(fixedRate = 90000)
@@ -40,15 +39,11 @@ class PeriodicalDataScraper {
         try {
             trafficData = restTemplate.exchange(targetUrl.toString(), HttpMethod.GET, entity, String.class);
             dbProcessor.addMeasurementsToDB(dbProcessor.getMeasurementsFromBody(trafficData.getBody()));
-            // LOG.info("Got traffic data: " + trafficData.getBody());
-            LOG.info("Got traffic data");
         } catch (ResourceAccessException rae) {
             LOG.error("Could not access resource: " + rae);
         } catch (Exception e) {
             LOG.error("Got unexpected exception: " + e);
         }
-        // TODO - In my opinion we have to be prepared for data violating our constraints on database
-        // e.g. service may return the same data twice...
     }
 
     @PreDestroy
