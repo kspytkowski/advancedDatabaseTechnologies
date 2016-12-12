@@ -1,11 +1,13 @@
-package pl.edu.agh.kis.scraper.db;
+package pl.edu.agh.kis.db;
 
 import com.datastax.driver.core.*;
 import com.datastax.driver.extras.codecs.jdk8.InstantCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.edu.agh.kis.scraper.model.Measurement;
+import org.springframework.stereotype.Component;
+import pl.edu.agh.kis.model.Measurement;
 
+import javax.annotation.PreDestroy;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,7 +17,8 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class CassandraDBProcessor implements DBProcessor {
+@Component
+class CassandraDBProcessor implements DBProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(CassandraDBProcessor.class);
     private static final String[] CASSANDRA_NODES = new String[]{"10.156.207.9", "10.156.207.26", "10.156.207.175"};
@@ -41,7 +44,7 @@ public class CassandraDBProcessor implements DBProcessor {
             batches(measurements, 100).forEach(
                     z -> {
                         BatchStatement batchStatement = new BatchStatement();
-                        z.forEach(x -> batchStatement.add(new BoundStatement(preparedStatement).bind(x.getSensorId(), x.getMeasurmentTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurment())));
+                        z.forEach(x -> batchStatement.add(new BoundStatement(preparedStatement).bind(x.getSensorId(), x.getMeasurementTimestamp().toInstant(ZoneOffset.UTC), x.getMeasurement())));
                         session.execute(batchStatement);
                     }
             );
@@ -69,6 +72,11 @@ public class CassandraDBProcessor implements DBProcessor {
         cluster.close();
     }
 
+    @PreDestroy
+    void cleanUp() {
+        closeConnection();
+    }
+
     private <T> Stream<List<T>> batches(List<T> source, int length) {
         if (length <= 0)
             throw new IllegalArgumentException("length = " + length);
@@ -79,4 +87,5 @@ public class CassandraDBProcessor implements DBProcessor {
         return IntStream.range(0, fullChunks + 1).mapToObj(
                 n -> source.subList(n * length, n == fullChunks ? size : (n + 1) * length));
     }
+
 }

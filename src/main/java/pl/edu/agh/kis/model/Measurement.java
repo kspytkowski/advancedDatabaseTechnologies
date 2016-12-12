@@ -1,4 +1,4 @@
-package pl.edu.agh.kis.scraper.model;
+package pl.edu.agh.kis.model;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -11,7 +11,8 @@ public class Measurement {
     @NonNull
     private String sensorId;
     @NonNull
-    private LocalDateTime measurmentTimestamp;
+    private LocalDateTime measurementTimestamp;
     @NonNull
-    private int measurment;
+    private int measurement;
+
 }
